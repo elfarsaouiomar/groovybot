@@ -1,0 +1,53 @@
+version: '3.6'
+
+volumes:
+  mysql_data: {}
+
+services:
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./:/app
+      - ./nginx.conf:/etc/nginx/conf.d/nginx.conf
+    depends_on:
+      - mysql
+      - app
+
+  mysql:
+    image: mysql:5.7
+    restart: unless-stopped
+    container_name: groovybot_db
+    ports:
+      - "3333:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_USERNAME}
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - mysql_data:/var/lib/mysql/
+
+  composer:
+    image: composer:1.10.20
+    container_name: composer
+    volumes:
+      - ../:/app
+    working_dir: /app
+    entrypoint: ["composer"]
+    depends_on:
+      - app
+  
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: groovybot_app
+    volumes:
+      - ../:/app
+    ports:
+      - "7000:9000" # php-fpm port
+    depends_on:
+      - mysql

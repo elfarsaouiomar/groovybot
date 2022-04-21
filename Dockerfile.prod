@@ -1,0 +1,31 @@
+FROM composer:latest as composerbuild
+
+WORKDIR /app
+
+COPY . /app
+
+
+RUN composer install
+
+# RUN apt-get update -y && apt-get install -y libmcrypt-dev openssl git vim nano curl wget libzip-dev libpng-dev
+# # RUN docker-php-ext-install gd && docker-php-ext-install zip && docker-php-ext-install exif
+# # RUN docker-php-ext-install pdo pdo_mysql pcntl
+
+
+
+
+FROM php:7.3-fpm
+
+WORKDIR /app
+
+COPY --from=stage composerbuild /app /app
+
+
+
+
+COPY composer.json composer.json
+COPY composer.lock composer.lock
+
+RUN chown -R www-data:www-data /app/
+USER www-data
+
