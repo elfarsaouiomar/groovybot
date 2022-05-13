@@ -1,31 +1,14 @@
-FROM composer:latest as vendor
+FROM webdevops/php-nginx:7.4-alpine
+
+
+ENV WEB_DOCUMENT_ROOT /app/public
+ENV WEB_ALIAS_DOMAIN groovybot.test
 
 WORKDIR /app
-
-COPY database/ database/
-COPY tests tests
-COPY composer.json composer.json
-COPY composer.lock composer.lock
-
-RUN composer update 
-
-RUN composer install
 
 COPY . .
-RUN composer dump-autoload
+
+RUN composer install -d /app --no-interaction --optimize-autoloader --no-dev
 
 
-FROM php:7.4-fpm
-
-WORKDIR /app
-
-
-RUN apt-get update -y && apt-get install -y libmcrypt-dev libzip-dev libpng-dev \
-    && docker-php-ext-install pdo_mysql
-
-COPY --from=vendor /app/ /app/
-
-
-RUN chown -R www-data:www-data /app/
-USER www-data
-
+RUN chown -R application:application .
